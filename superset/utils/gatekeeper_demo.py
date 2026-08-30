@@ -23,4 +23,4 @@ single rename: `gatekeeper_helllo` should be `gatekeeper_hello`.
 
 def gatekeeper_helllo() -> str:
     """Return a greeting string."""
-    return "hello from gatekeeper"
+    return "Hello from Gatekeeper"
