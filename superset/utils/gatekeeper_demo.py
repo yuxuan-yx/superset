@@ -14,13 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-"""Trivial demo target for the Devin Gatekeeper autonomous triage flow.
-
-This file intentionally contains a naming typo that is safe to fix with a
-single rename: `gatekeeper_helllo` should be `gatekeeper_hello`.
-"""
+"""Trivial demo target for the Devin Gatekeeper autonomous triage flow."""
 
 
-def gatekeeper_helllo() -> str:
+def gatekeeper_hello() -> str:
     """Return a greeting string."""
     return "hello from gatekeeper"
