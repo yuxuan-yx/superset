@@ -41,7 +41,6 @@ jobs:
         uses: yuxuan-yx/devin-webhook-gatekeeper@main
         with:
           devin-api-key: ${{ secrets.DEVIN_API_KEY }}
-          devin-org-id: ${{ vars.DEVIN_ORG_ID }}
           allowed-repositories: '["${{ github.repository }}"]'
           allowed-issue-labels: '["needs-devin-triage","security-cve"]'
           playbook-id-ci-failure: ${{ vars.PLAYBOOK_ID_CI_FAILURE }}
