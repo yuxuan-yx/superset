@@ -1,0 +1,69 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+name: Devin Autonomous Triage
+
+on:
+  issues:
+    types: [labeled]
+  # zizmor: ignore[dangerous-triggers]
+  # workflow_run is flagged because it runs privileged against untrusted code.
+  # This job never checks the triggering revision out and never executes
+  # anything from it; it reads the event metadata and calls a pinned action.
+  workflow_run:
+    workflows: ["Python-Unit", "Frontend Build CI (unit tests, linting & sanity checks)", "E2E"]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: devin-triage-${{ github.event.issue.number || github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gatekeeper
+        id: gatekeeper
+        # Pinned to a SHA rather than a branch: the gatekeeper's default branch
+        # dropped the Actions entrypoint, and this ref is the first one whose
+        # client targets the org-scoped v3 sessions API.
+        uses: yuxuan-yx/devin-webhook-gatekeeper@0a828e90a7b0bcc5e4190a03671384fe3fa41521 # v3-org-scoped dispatch
+        with:
+          devin-api-key: ${{ secrets.DEVIN_API_KEY }}
+          # Not a credential: an org identifier, and the v3 sessions endpoint is
+          # scoped by it. Inlined so the pipeline does not depend on a repo
+          # variable being present. A repo variable still wins when set.
+          devin-org-id: ${{ vars.DEVIN_ORG_ID || 'org-b3950c8dc8f4482891f443c5cb00c21a' }}
+          allowed-repositories: '["${{ github.repository }}"]'
+          allowed-issue-labels: '["needs-devin-triage","security-cve"]'
+          playbook-id-ci-failure: ${{ vars.PLAYBOOK_ID_CI_FAILURE }}
+          playbook-id-issue-triage: ${{ vars.PLAYBOOK_ID_ISSUE_TRIAGE }}
+          playbook-id-security: ${{ vars.PLAYBOOK_ID_SECURITY }}
+          knowledge-id-repo-context: ${{ vars.KNOWLEDGE_ID_REPO_CONTEXT }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Echo decision
+        env:
+          DECISION: ${{ steps.gatekeeper.outputs.decision }}
+          SESSION_URL: ${{ steps.gatekeeper.outputs.session-url }}
+        run: |
+          echo "decision=$DECISION"
+          echo "session=$SESSION_URL"
