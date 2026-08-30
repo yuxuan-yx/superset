@@ -20,6 +20,10 @@ name: Devin Autonomous Triage
 on:
   issues:
     types: [labeled]
+  # zizmor: ignore[dangerous-triggers]
+  # workflow_run is flagged because it runs privileged against untrusted code.
+  # This job never checks the triggering revision out and never executes
+  # anything from it; it reads the event metadata and calls a pinned action.
   workflow_run:
     workflows: ["Python-Unit", "Frontend Build CI (unit tests, linting & sanity checks)", "E2E"]
     types: [completed]
@@ -57,6 +61,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Echo decision
+        env:
+          DECISION: ${{ steps.gatekeeper.outputs.decision }}
+          SESSION_URL: ${{ steps.gatekeeper.outputs.session-url }}
         run: |
-          echo "decision=${{ steps.gatekeeper.outputs.decision }}"
-          echo "session=${{ steps.gatekeeper.outputs.session-url }}"
+          echo "decision=$DECISION"
+          echo "session=$SESSION_URL"
