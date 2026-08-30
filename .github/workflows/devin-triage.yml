@@ -41,7 +41,10 @@ jobs:
         uses: yuxuan-yx/devin-webhook-gatekeeper@main
         with:
           devin-api-key: ${{ secrets.DEVIN_API_KEY }}
-          devin-org-id: ${{ vars.DEVIN_ORG_ID }}
+          # Not a credential: an org identifier, and the v3 sessions endpoint is
+          # scoped by it. Inlined so the pipeline does not depend on a repo
+          # variable being present. A repo variable still wins when set.
+          devin-org-id: ${{ vars.DEVIN_ORG_ID || 'org-b3950c8dc8f4482891f443c5cb00c21a' }}
           allowed-repositories: '["${{ github.repository }}"]'
           allowed-issue-labels: '["needs-devin-triage","security-cve"]'
           playbook-id-ci-failure: ${{ vars.PLAYBOOK_ID_CI_FAILURE }}
